@@ -15,6 +15,12 @@ set_target_properties(
     VERSION "${MATERIALX_LIBRARY_VERSION}"
     SOVERSION "${MATERIALX_MAJOR_VERSION}")
 
+if(DEFINED MATERIALX_FORCE_COPY_LIBRARIES_PATH)
+    add_custom_command(TARGET MaterialXCore POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../libraries ${MATERIALX_FORCE_COPY_LIBRARIES_PATH})
+endif()
+
 target_link_libraries(
     MaterialXCore
     ${CMAKE_DL_LIBS})
