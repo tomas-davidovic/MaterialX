@@ -197,6 +197,9 @@ class MX_CORE_API PortElement : public ValueElement
     static const string CHANNELS_ATTRIBUTE;
 
   private:
+    /// Given the connected output, it adds channels (if not present)
+    /// such that the output can be connected, allowing basic conversions (e.g., vector3->vector2 etc).
+    void makeCompatible(const string& connectionType) const;
     static const std::unordered_map<string, CharSet> CHANNELS_CHARACTER_SET;
     static const std::unordered_map<string, size_t> CHANNELS_PATTERN_LENGTH;
 };

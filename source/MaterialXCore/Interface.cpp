@@ -208,6 +208,8 @@ bool PortElement::validate(string* message) const
 
             if (output)
             {
+                makeCompatible(output->getType());
+
                 if (hasChannels())
                 {
                     bool valid = validChannelsString(getChannels(), output->getType(), getType());
@@ -215,21 +217,56 @@ bool PortElement::validate(string* message) const
                 }
                 else
                 {
+                    if (getType() != output->getType())
+                        output = output;
                     validateRequire(getType() == output->getType(), res, message, "Mismatched types in port connection");
                 }
             }
         }
-        else if (hasChannels())
+        else
         {
-            bool valid = validChannelsString(getChannels(), connectedNode->getType(), getType());
-            validateRequire(valid, res, message, "Invalid channels string in port connection");
-        }
-        else if (connectedNode->getType() != MULTI_OUTPUT_TYPE_STRING)
-        {
-            validateRequire(getType() == connectedNode->getType(), res, message, "Mismatched types in port connection");
+            makeCompatible(connectedNode->getType());
+
+            if (hasChannels())
+            {
+                bool valid = validChannelsString(getChannels(), connectedNode->getType(), getType());
+                validateRequire(valid, res, message, "Invalid channels string in port connection");
+            }
+            else if (connectedNode->getType() != MULTI_OUTPUT_TYPE_STRING)
+            {
+                if (getType() != connectedNode->getType())
+                    connectedNode = connectedNode;
+                validateRequire(getType() == connectedNode->getType(), res, message, "Mismatched types in port connection");
+            }
         }
     }
     return ValueElement::validate(message) && res;
+}
+
+void PortElement::makeCompatible(const string& connectionType) const
+{
+    // The swizzle to use when going from any valid input into any of the outputs
+    const std::unordered_map<string, std::vector<char>> CHANNELS_CHARACTER_VECTOR = {
+        { "float", { 'x', 'x', 'x', 'x' } },
+        { "color3", { 'r', 'g', 'b', 'b' } },
+        { "color4", { 'r', 'g', 'b', 'a' } },
+        { "vector2", { 'x', 'y', 'y', 'y' } },
+        { "vector3", { 'x', 'y', 'z', 'z' } },
+        { "vector4", { 'x', 'y', 'z', 'w' } }
+    };
+
+    if (hasChannels() || getType() == connectionType || CHANNELS_PATTERN_LENGTH.count(getType()) == 0)
+        return;
+
+    if(getRoot()->getAttribute("relax_type_safety") != "enabled")
+        return;
+
+    size_t count = CHANNELS_PATTERN_LENGTH.at(getType());
+    const std::vector<char>& srcChars = CHANNELS_CHARACTER_VECTOR.at(connectionType);
+    string channels;
+    for (size_t i = 0; i < count; ++i)
+        channels.push_back(srcChars[i]);
+    const_cast<PortElement*>(this)->setChannels(channels);
 }
 
 bool PortElement::validChannelsCharacters(const string& channels, const string& sourceType)
