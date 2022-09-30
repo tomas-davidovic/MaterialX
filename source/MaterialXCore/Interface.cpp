@@ -217,8 +217,6 @@ bool PortElement::validate(string* message) const
                 }
                 else
                 {
-                    if (getType() != output->getType())
-                        output = output;
                     validateRequire(getType() == output->getType(), res, message, "Mismatched types in port connection");
                 }
             }
@@ -234,8 +232,6 @@ bool PortElement::validate(string* message) const
             }
             else if (connectedNode->getType() != MULTI_OUTPUT_TYPE_STRING)
             {
-                if (getType() != connectedNode->getType())
-                    connectedNode = connectedNode;
                 validateRequire(getType() == connectedNode->getType(), res, message, "Mismatched types in port connection");
             }
         }
